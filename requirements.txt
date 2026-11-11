@@ -1,0 +1,30 @@
+# Minimum versions (>=) instead of hard pins: this way installation also works
+# on very recent Python versions (e.g. 3.14), where some old pins have no wheel.
+# For a reproducible production environment, use a lockfile (Week 7).
+
+# --- Core API ---
+fastapi>=0.115
+uvicorn[standard]>=0.32
+python-multipart>=0.0.17   # required for uploads (multipart/form-data)
+pydantic>=2.9
+pydantic-settings>=2.6
+
+# --- Document processing (Week 2) ---
+pymupdf>=1.24        # text extraction from PDFs (import: `pymupdf` or `fitz`)
+
+# --- Embeddings and vector database (Week 3) ---
+sentence-transformers>=3.0   # generates the embeddings (also pulls torch)
+numpy>=1.26                  # vectors
+psycopg[binary]>=3.2        # Postgres driver (v3)
+pgvector>=0.3               # integration of the `vector` type with psycopg
+
+# --- File validation (optional but recommended) ---
+# Verifies the real file type (magic bytes). If not installed, the code still
+# uses a fallback check on the PDF magic bytes.
+# On Windows the *-bin variant bundles the required DLLs.
+python-magic-bin>=0.4.14 ; sys_platform == "win32"
+python-magic>=0.4.27     ; sys_platform != "win32"
+
+# --- Tests ---
+pytest>=8.3
+httpx>=0.27            # test client for FastAPI

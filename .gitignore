@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# Ambiente
+.env
+
+# Uploaded files (data, not code) — keep the folder, ignore its contents
+uploads/*
+!uploads/.gitkeep
