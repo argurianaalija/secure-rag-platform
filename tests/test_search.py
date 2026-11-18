@@ -1,22 +1,24 @@
 """End-to-end test for Week 3: indexing + semantic search.
 
-This test is "heavy": it needs the embedding libraries and a running
-Postgres+pgvector. If anything is missing (libraries, model, or DB), it is
-SKIPPED (it does not fail), so the suite stays green on a machine without a DB,
-without the models downloaded, or where PyTorch cannot load.
+This test is "heavy": it needs the configured embedding backend and a running
+Postgres+pgvector. If anything is missing (library or DB), it is SKIPPED (it
+does not fail), so the suite stays green on a machine without a DB.
 
 Start the DB first:  docker compose up -d
 """
 
+import importlib
 import io
 
 import pytest
 
-# The embedding backend may be unavailable (not installed, or its native
-# libraries blocked by the OS). We skip the whole file instead of failing.
-try:
-    import sentence_transformers  # noqa: F401
+from app.config import Settings
 
+# The configured embedding backend may be unavailable (not installed, or its
+# native libraries blocked by the OS). We skip the whole file instead of failing.
+_BACKEND_MODULES = {"fastembed": "fastembed", "sentence-transformers": "sentence_transformers"}
+try:
+    importlib.import_module(_BACKEND_MODULES[Settings().embedding_backend])
     _EMBEDDINGS_OK = True
 except Exception:  # ImportError, OSError (blocked DLLs), etc.
     _EMBEDDINGS_OK = False
@@ -24,8 +26,6 @@ except Exception:  # ImportError, OSError (blocked DLLs), etc.
 pytest.importorskip("pgvector")
 pymupdf = pytest.importorskip("pymupdf")
 import psycopg  # noqa: E402
-
-from app.config import Settings  # noqa: E402
 
 
 def _db_available() -> bool:

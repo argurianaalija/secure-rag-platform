@@ -6,8 +6,11 @@ venv/
 .pytest_cache/
 *.egg-info/
 
-# Ambiente
+# Environment
 .env
+
+# Downloaded embedding models (fastembed cache)
+.cache/
 
 # Uploaded files (data, not code) — keep the folder, ignore its contents
 uploads/*

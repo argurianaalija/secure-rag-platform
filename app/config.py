@@ -7,6 +7,7 @@ MAX_UPLOAD_SIZE_MB="abc" the app refuses to start instead of breaking at runtime
 
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -29,9 +30,18 @@ class Settings(BaseSettings):
     # Vector database and embeddings (Week 3).
     # Connection URL for Postgres+pgvector (see docker-compose.yml).
     database_url: str = "postgresql://postgres:ragpass@localhost:5433/ragdb"
+    # Seconds to wait for the DB before giving up. Without a limit, an
+    # unreachable DB makes startup (and every DB request) hang forever.
+    db_connect_timeout_s: int = 5
+    # Which library runs the embedding model (see app/services/embeddings.py).
+    # "fastembed" uses ONNX Runtime (no PyTorch); "sentence-transformers" uses PyTorch.
+    embedding_backend: Literal["fastembed", "sentence-transformers"] = "fastembed"
     # Embedding model. all-MiniLM-L6-v2: small, fast, 384 dimensions.
     embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
     embedding_dim: int = 384
+    # Where fastembed stores the downloaded model (git-ignored). Kept inside the
+    # project so the OS does not wipe it like it can with the temp folder.
+    embedding_cache_dir: str = ".cache/fastembed"
     # Default number of chunks returned by a search.
     search_top_k: int = 5
 

@@ -13,8 +13,11 @@ pydantic-settings>=2.6
 pymupdf>=1.24        # text extraction from PDFs (import: `pymupdf` or `fitz`)
 
 # --- Embeddings and vector database (Week 3) ---
-sentence-transformers>=3.0   # generates the embeddings (also pulls torch)
+fastembed>=0.4              # default embedding backend (ONNX Runtime, no PyTorch)
 numpy>=1.26                  # vectors
+# Optional alternative backend (EMBEDDING_BACKEND=sentence-transformers).
+# Pulls PyTorch (large); not needed with the default backend.
+# sentence-transformers>=3.0
 psycopg[binary]>=3.2        # Postgres driver (v3)
 pgvector>=0.3               # integration of the `vector` type with psycopg
 

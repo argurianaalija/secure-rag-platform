@@ -34,17 +34,17 @@ class InvalidFileTypeError(AppError):
 
 class FileTooLargeError(AppError):
     code = "file_too_large"
-    http_status = status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+    http_status = 413  # Content Too Large
 
 
 class EmptyFileError(AppError):
     code = "empty_file"
-    http_status = status.HTTP_422_UNPROCESSABLE_ENTITY
+    http_status = 422  # Unprocessable Content
 
 
 class CorruptedFileError(AppError):
     code = "corrupted_file"
-    http_status = status.HTTP_422_UNPROCESSABLE_ENTITY
+    http_status = 422  # Unprocessable Content
 
 
 class DocumentNotFoundError(AppError):
@@ -73,7 +73,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             detail="Invalid request: " + "; ".join(e["msg"] for e in exc.errors()),
         )
         return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=422,  # Unprocessable Content
             content=payload.model_dump(),
         )
 

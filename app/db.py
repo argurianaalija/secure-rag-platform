@@ -35,7 +35,7 @@ def _connect(settings: Settings) -> psycopg.Connection:
     `register_vector` needs the `vector` extension to already exist in the DB
     (we create it in `init_schema`).
     """
-    conn = psycopg.connect(settings.database_url)
+    conn = psycopg.connect(settings.database_url, connect_timeout=settings.db_connect_timeout_s)
     register_vector(conn)
     return conn
 
@@ -45,7 +45,7 @@ def init_schema(settings: Settings) -> None:
 
     Idempotent: it can be called any number of times (IF NOT EXISTS).
     """
-    conn = psycopg.connect(settings.database_url)
+    conn = psycopg.connect(settings.database_url, connect_timeout=settings.db_connect_timeout_s)
     try:
         with conn.cursor() as cur:
             cur.execute("CREATE EXTENSION IF NOT EXISTS vector")

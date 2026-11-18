@@ -4,8 +4,8 @@ A FastAPI backend for a secure Retrieval-Augmented Generation (RAG) system over
 PDF documents. It is built incrementally; security is a first-class concern from
 day one (hence *Secure* RAG).
 
-**Status:** Weeks 1–2 complete and tested; Week 3 (embeddings + semantic search)
-implemented, end-to-end validation in progress.
+**Status:** Weeks 1–3 complete and tested (upload, chunking, embeddings and
+semantic search over Postgres/pgvector). Next: Week 4, the RAG pipeline.
 
 > Roadmap: upload & API (Week 1), text extraction & chunking (Week 2),
 > embeddings + pgvector (Week 3), RAG pipeline (Week 4), AI security (Week 5),
@@ -28,7 +28,7 @@ implemented, end-to-end validation in progress.
 ```
 Client ──▶ FastAPI ──▶ validation + storage (PDF on disk)
                    ──▶ extraction (PyMuPDF) ──▶ chunking (overlap)
-                   ──▶ embeddings (Sentence Transformers)
+                   ──▶ embeddings (fastembed / ONNX Runtime, local)
                    ──▶ Postgres + pgvector (vector search)
 ```
 
@@ -49,13 +49,14 @@ secure-rag-platform/
 │       ├── storage.py     # PDF validation + storage
 │       ├── extraction.py  # text extraction with PyMuPDF (Week 2)
 │       ├── chunking.py    # chunking with overlap (Week 2)
-│       └── embeddings.py  # Sentence Transformers (Week 3)
+│       └── embeddings.py  # embeddings, fastembed or sentence-transformers (Week 3)
 ├── scripts/
 │   └── init_db.py         # create the DB schema manually
 ├── docker-compose.yml     # Postgres + pgvector (Week 3)
 ├── tests/
 │   ├── test_upload.py     # happy path and error cases
 │   ├── test_chunking.py   # unit tests for the chunking logic
+│   ├── test_embeddings.py # unit tests for the embedding service
 │   ├── test_processing.py # end-to-end: from upload to chunks
 │   └── test_search.py     # end-to-end: indexing + search (requires DB)
 ├── uploads/               # uploaded files (git-ignored)
@@ -114,9 +115,12 @@ curl "http://127.0.0.1:8000/search?q=your+question"
 pytest
 ```
 
-Unit and integration tests cover upload validation and the chunking logic. The
-semantic-search test (`test_search.py`) is automatically skipped when the
-embedding backend or the database is unavailable, so the suite stays green.
+Unit and integration tests cover upload validation, chunking and the embedding
+service. The end-to-end semantic-search test (`test_search.py`) needs the
+database (`docker compose up -d`); it is skipped when the database or the
+embedding backend is unavailable, so the suite stays green.
+
+The first run downloads the embedding model (~90 MB) into `.cache/fastembed`.
 
 ## Security decisions (from Week 1)
 
@@ -152,6 +156,18 @@ Key concepts:
   operator (cosine distance); `1 - distance` = similarity;
 - search finds chunks **by meaning**, even when they do not contain the same
   words as the question.
+
+Design notes:
+- **local embeddings**: the model runs on the machine with
+  [fastembed](https://github.com/qdrant/fastembed) (ONNX Runtime), so document
+  text is never sent to a third-party API, and no PyTorch is needed;
+- **swappable backend**: `EMBEDDING_BACKEND=fastembed | sentence-transformers`
+  runs the same model with either library. Routers and database only call
+  `embed_texts` / `embed_query`, so the choice is isolated in one module;
+- **fail fast on mismatch**: if the model's vector size differs from
+  `EMBEDDING_DIM` (the `vector(N)` column), indexing stops with a clear error;
+- **bounded DB waits**: connections use `DB_CONNECT_TIMEOUT_S`, so an
+  unreachable database produces an error instead of a hung server.
 
 ## Next step (Week 4)
 
